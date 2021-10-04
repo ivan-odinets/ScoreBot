@@ -41,7 +41,7 @@ Database::Database()
 bool Database::databaseInitialized()
 {
     if (!db.open()) {
-        qCritical() << __FILE__ << " " << __LINE__ <<" Error in initializing database - "<<db.lastError();
+        qCritical() << __FILE__ << " " << __LINE__ <<". Error in initializing database - "<<db.lastError();
         return false;
     }
 
@@ -62,8 +62,8 @@ bool Database::chatRegistered(quint64 chatId)
 
 void Database::addChat(quint64 chatId)
 {
-    if (chatRegistered(chatId)) {
-        qDebug() << __FILE__ << ":" << __LINE__ << ". This should have not happened. Probably database needs to be rechecked. chat_id="<<chatId;
+    if (Q_UNLIKELY(chatRegistered(chatId))) {
+        qInfo() << __FILE__ << ":" << __LINE__ << ". This should have not happened. Probably database needs to be rechecked. chat_id="<<chatId;
         return;
     }
 
@@ -71,7 +71,7 @@ void Database::addChat(quint64 chatId)
             .arg(chatId);
     QSqlQuery query;
 
-    if (!query.exec(queryText)) {
+    if (Q_UNLIKELY(!query.exec(queryText))) {
         qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
         return;
     }
@@ -84,7 +84,7 @@ void Database::removeChat(quint64 chatId)
     QString queryText = QString("DROP TABLE \"%1\"")
             .arg(chatId);
 
-    if (!query.exec(queryText)) {
+    if (Q_UNLIKELY(!query.exec(queryText))) {
         qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
         return;
     }
@@ -103,7 +103,7 @@ bool Database::userIsRegistered(quint64 chatId, quint32 userId)
     QString queryText = QString("SELECT user_id FROM \"%1\" WHERE user_id = %2")
             .arg(chatId).arg(userId);
 
-    if (!query.exec(queryText.toLatin1())) {
+    if (Q_UNLIKELY(!query.exec(queryText.toLatin1()))) {
         qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
         return false;
     }
@@ -125,7 +125,7 @@ void Database::registerUser(quint64 chatId,quint32 userId)
     QString queryText = QString("INSERT INTO \"%1\" (user_id,score,in_game,last_rolled) VALUES (%2,0,1,0);")
             .arg(chatId).arg(userId);
 
-    if (!query.exec(queryText))
+    if (Q_UNLIKELY(!query.exec(queryText)))
         qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
 
     return;
@@ -137,7 +137,7 @@ void Database::unregisterUser(quint64 chatId, quint32 userId)
     QString queryText = QString("UPDATE \"%1\" SET in_game = 0 WHERE user_id = %2")
             .arg(chatId).arg(userId);
 
-    if (!query.exec(queryText))
+    if (Q_UNLIKELY(!query.exec(queryText)))
         qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
 }
 
@@ -150,8 +150,8 @@ void Database::unregisterUser(quint64 chatId, quint32 userId)
 
 bool Database::userIsActive(quint64 chatId, quint32 userId)
 {
-    if (!userIsRegistered(chatId,userId)) {
-        qDebug() << __FILE__ << ":" << __LINE__ << ". this should not happen... userId="<<userId<<"; chatId="<<chatId;
+    if (Q_UNLIKELY(!userIsRegistered(chatId,userId))) {
+        qInfo() << __FILE__ << ":" << __LINE__ << ". this should not happen... userId="<<userId<<"; chatId="<<chatId;
         return false;
     }
 
@@ -159,7 +159,7 @@ bool Database::userIsActive(quint64 chatId, quint32 userId)
     QString queryText = QString("SELECT user_id,in_game FROM \"%1\" WHERE user_id = %2")
             .arg(chatId).arg(userId);
 
-    if (!query.exec(queryText)) {
+    if (Q_UNLIKELY(!query.exec(queryText))) {
         qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
         return false;
     }
@@ -168,7 +168,7 @@ bool Database::userIsActive(quint64 chatId, quint32 userId)
     bool result = (query.value("in_game").toInt() == 1);
 
     if (query.next())
-        qWarning() << __FILE__ << ":" << __LINE__ << " Duplicates in database?";
+        qWarning() << __FILE__ << ":" << __LINE__ << ". Duplicates in database?";
 
     return result;
 }
@@ -179,7 +179,7 @@ void Database::activateUser(quint64 chatId, quint32 userId)
     QString queryText = QString("UPDATE \"%1\" SET in_game = 1 WHERE user_id = %2")
             .arg(chatId).arg(userId);
 
-    if (!query.exec(queryText))
+    if (Q_UNLIKELY(!query.exec(queryText)))
         qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
 
 }
@@ -190,7 +190,7 @@ void Database::deactivateUser(quint64 chatId, quint32 userId)
     QString queryText = QString("UPDATE \"%1\" SET in_game = 0 WHERE user_id = %2")
             .arg(chatId).arg(userId);
 
-    if (!query.exec(queryText))
+    if (Q_UNLIKELY(!query.exec(queryText)))
         qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
 
 }
@@ -208,7 +208,7 @@ void Database::updateScore(quint64 chatId,quint32 userId,int score)
     QString queryText = QString("UPDATE \"%1\" SET score = %3 WHERE user_id = %2")
             .arg(chatId).arg(userId).arg(score);
 
-    if (!query.exec(queryText))
+    if (Q_UNLIKELY(!query.exec(queryText)))
         qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
 }
 
@@ -226,7 +226,7 @@ int Database::getScore(quint64 chatId, quint32 userId)
     query.next();
     int score = query.value("score").toInt();
 
-    if (query.next())
+    if (Q_UNLIKELY(!query.exec(queryText)))
         qWarning() << __FILE__ << ":" << __LINE__ << ". Seems to have duplicates in database? chatId="<<chatId<<"; userId="<<userId;
 
     return score;
@@ -245,7 +245,7 @@ QDateTime Database::lastRolled(quint64 chatId, quint32 userId)
     QString queryText = QString("SELECT user_id,last_rolled FROM \"%1\" WHERE user_id = %2")
             .arg(chatId).arg(userId);
 
-    if (!query.exec(queryText)) {
+    if (Q_UNLIKELY(!query.exec(queryText))) {
         qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
         return QDateTime();
     }
@@ -254,7 +254,7 @@ QDateTime Database::lastRolled(quint64 chatId, quint32 userId)
     qint64 secondsSinceEpochLastRoll = query.value("last_rolled").toLongLong();
 
     QDateTime result = QDateTime::fromSecsSinceEpoch(secondsSinceEpochLastRoll);
-    if (query.next())
+    if (Q_UNLIKELY(query.next()))
         qWarning() << __FILE__ << ":" << __LINE__ << ". Seems to have duplicates in database? chatId="<<chatId<<"; userId="<<userId;
 
     return result;
@@ -266,7 +266,7 @@ void Database::updateRollTime(quint64 chatId, quint32 userId, const QDateTime& r
             .arg(chatId).arg(userId).arg(rollDateTime.toSecsSinceEpoch()));
 
     QSqlQuery query;
-    if (!query.exec(queryText)) {
+    if (Q_UNLIKELY(!query.exec(queryText))) {
         qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
         return;
     }
@@ -287,16 +287,25 @@ QList<UserData> Database::getTopUsers(quint64 chatId)
     QString queryText = QString("SELECT user_id,score FROM \"%1\"")
             .arg(chatId);
 
-    if (!query.exec(queryText)) {
+    if (Q_UNLIKELY(!query.exec(queryText))) {
         qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
         return result;
     }
 
-    #warning("//TODO: Sort this f*cking list")
     while (query.next()) {
         UserData item(query.value("user_id").toUInt(),query.value("score").toUInt());
+        if (item.first == 0)
+            continue;
+
         result.append(item);
     }
+
+    if (result.isEmpty())
+        return result;
+
+    std::sort(result.begin(),result.end(),[](const UserData& first,const UserData& second){
+        return first.second > second.second;
+    });
 
     return result;
 }

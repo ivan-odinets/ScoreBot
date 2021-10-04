@@ -30,7 +30,7 @@
 class SuperRandomGenerator
 {
 public:
-    static int generateScoreChange(int currentLength);
+    static int generateScoreChange(int currentScore);
 };
 
 #endif // SUPERRANDOMGENERATOR_H

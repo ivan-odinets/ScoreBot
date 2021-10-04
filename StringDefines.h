@@ -59,15 +59,15 @@
 #define NO_GAME_TODAY_MESSAGE       "%1 you have rolled today"
 
 #define UPDATE_INCREASE_MESSAGE     "%1, your score increased by %2. Now your score is: %3."
-#define UPDATE_DECREASE_MESSAGE     "%1, your score decreased by %2. Now your score is: %3."// Продовжуй грати через 6 год., 18 хв.
+#define UPDATE_DECREASE_MESSAGE     "%1, your score decreased by %2. Now your score is: %3."
 
 #define TOP10_MESSAGE               "Top 10 players:\r\n\r\n"
 #define TOP_MESSAGE                 "Top players:\r\n\r\n"
 
-#define HELP_MESSAGE                APP_NAME" - is a very simple \"game\" bot for Telegram group chats.\r\n"\
-                                    "You can play in this game each day by entering /roll in the group chat. After this your score increases/decreases by random value.\r\n"\
-                                    "Top scores: /top\r\n"\
-                                    "Exit the game (progress will be saved): /unroll\r\n"\
+#define HELP_MESSAGE                APP_NAME " - is a very simple \"game\" bot for Telegram group chats.\r\n"\
+                                    "You can play in this game each day by entering " ROLL_USER_CMD " in the group chat. After this your score increases/decreases by random value.\r\n"\
+                                    "Top scores: " TOP_CMD "\r\n"\
+                                    "Exit the game (progress will be saved): " UNROLL_USER_CMD "\r\n"\
                                     "\r\n"\
                                     "Bot is not working in private chats, only in groups."
 

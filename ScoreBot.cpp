@@ -42,6 +42,7 @@ bool ScoreBot::started()
     connect(p_botApi,&Telegram::Bot::message,this,&ScoreBot::messageRecieved);
 
     m_botUser = p_botApi->getMe();
+    qInfo() << __FILE__ << ":" << __LINE__ << ". Staring process using API key for following bot: "<<m_botUser;
 
     return true;
 }
@@ -106,6 +107,11 @@ void ScoreBot::handleChatRemoval(const Telegram::Message& message)
 
 void ScoreBot::handleCommand(const Telegram::Message &message)
 {
+    if (Q_UNLIKELY(!p_db->chatRegistered(message.chat.id))) {
+        qInfo() << __FILE__ << ":" << __LINE__ <<". Probably bot was added to the new chat, while process was not running. Adding chat to database.";
+        p_db->addChat(message.chat.id);
+    }
+
     if (message.string.startsWith(ROLL_USER_CMD)) {
         handleRollCommand(message);
         return;
@@ -151,9 +157,7 @@ void ScoreBot::handleRollCommand(const Telegram::Message &message)
         _sendReply(QString(USER_REGISTERED_MESSAGE).arg(message.from.firstname),message);
     }
 
-    qint64 lastRollTime = p_db->lastRolled(message.chat.id,message.from.id).toSecsSinceEpoch();
-    qint64 currentTime = QDateTime::currentSecsSinceEpoch();
-    bool canRoll = ((currentTime - lastRollTime) > 20*60);
+    bool canRoll = p_db->lastRolled(message.chat.id,message.from.id).date() < QDate::currentDate();
 
     if (!canRoll) {
         _sendReply(QString(NO_GAME_TODAY_MESSAGE).arg(message.from.firstname),message);
@@ -229,7 +233,8 @@ void ScoreBot::handleHelpCommand(const Telegram::Message &message)
 
 void ScoreBot::handleSomeRandomStuff(const Telegram::Message &message)
 {
-    if (message.string == "DROP TABLE") {
+    if ((message.string == "DROP TABLE") ||
+        (message.string.startsWith("/drop"))) {
         _sendReply("Bot database was successfully erased.",message);
         return;
     }

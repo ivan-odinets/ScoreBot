@@ -29,20 +29,20 @@
 #include <cstdlib>
 #include <QDebug>
 
-int SuperRandomGenerator::generateScoreChange(int currentLength)
+int SuperRandomGenerator::generateScoreChange(int currentScore)
 {
     //Absolute score change
     int change = 1 + std::rand()/((RAND_MAX + 1u)/10);
 
-    //if current length < 12 - only increase
-    if (currentLength < 12)
+    //if current score < 12 - only increase
+    if (currentScore < 12)
         return change;
 
     //Else - choose randomly
-    int signSelector = std::rand()/((RAND_MAX + 1u)/10);
+    int signSelector = std::rand()/((RAND_MAX + 1u)/100);
     qDebug() << __FILE__<< ":"<<__LINE__<<" signSelector="<<signSelector<<"; change="<<change<<";";
 
-    if (!(signSelector % 2) || !(signSelector % 3) ) {
+    if ( signSelector < 60 ) {
         return change;
     } else {
         return -change;

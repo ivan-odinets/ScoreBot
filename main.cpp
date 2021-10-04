@@ -53,13 +53,13 @@ int main(int argc, char *argv[])
     parser.process(app);
 
     if (parser.token().isEmpty()) {
-        qCritical() << __FILE__ << " " << __LINE__ << "API Token must be specified.";
+        qCritical() << __FILE__ << ":" << __LINE__ << ". API Token must be specified.";
         return -1;
     }
 
     //Check SQLITE driver
     if (!QSqlDatabase::drivers().contains("QSQLITE")) {
-        qCritical() << __FILE__ << " " << __LINE__ << "Unable to load database - needs the SQLITE driver";
+        qCritical() << __FILE__ << ":" << __LINE__ << ". Unable to load database - needs the Qt sqlite driver.";
         return -1;
     }
 
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     sqliteDb = new Database;
     sqliteDb->setFileName(parser.dbFile());
     if (!sqliteDb->databaseInitialized()) {
-        qCritical() << __FILE__ << " " << __LINE__ << "Some error in initializing database. Check previous messages...";
+        qCritical() << __FILE__ << ":" << __LINE__ << ". Some error in initializing database. Check previous messages.";
         return -1;
     }
 
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
     //Start Bot
     if (!bot->started()) {
-        qCritical() << __FILE__ << " " << __LINE__ << "Can not start bot...";
+        qCritical() << __FILE__ << ":" << __LINE__ << ". Can not start bot due to some errors.";
         return -1;
     }
 
