@@ -39,10 +39,20 @@ public:
         { return value(m_botTokenOption); }
     QString dbFile() const
         { return value(m_dbFileOption); }
+    qint64 botAdmin() const
+        { return value(m_botAdminOption).toLongLong(); }
+
+    bool showTimeZones() const
+        { return isSet(m_showTimeZonesOption); }
+    QString timeZone() const
+        { return value(m_setTimeZoneOption); }
 
 private:
     QCommandLineOption m_dbFileOption;
     QCommandLineOption m_botTokenOption;
+    QCommandLineOption m_botAdminOption;
+    QCommandLineOption m_setTimeZoneOption;
+    QCommandLineOption m_showTimeZonesOption;
 };
 
 #endif // COMMANDLINEPARSER_H

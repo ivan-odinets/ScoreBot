@@ -26,9 +26,10 @@
 
 #include "ScoreBot.h"
 
-#include "Database.h"
 #include "StringDefines.h"
 #include "SuperRandomGenerator.h"
+
+#include <QCoreApplication>
 
 ScoreBot::ScoreBot(QObject* parent)
     : QObject(parent),p_botApi(nullptr),p_db(nullptr)
@@ -63,7 +64,7 @@ void ScoreBot::messageRecieved(const Telegram::Message& message)
     }
 
     if (Q_LIKELY(message.string.startsWith("/"))) {
-        handleCommand(message);
+        handleChatCommand(message);
         return;
     }
 
@@ -80,15 +81,17 @@ void ScoreBot::messageRecieved(const Telegram::Message& message)
         handleChatRemoval(message);
         return;
     }
-
-    //Easter eggs
-    handleSomeRandomStuff(message);
 }
 
 void ScoreBot::handlePrivateMessage(const Telegram::Message& message)
 {
     if (message.string.startsWith(HELP_CMD)) {
         handleHelpCommand(message);
+        return;
+    }
+
+    if (message.from.id == m_botAdmin) {
+        handleBotAdminCommand(message);
         return;
     }
 
@@ -105,7 +108,12 @@ void ScoreBot::handleChatRemoval(const Telegram::Message& message)
     p_db->removeChat(message.chat.id);
 }
 
-void ScoreBot::handleCommand(const Telegram::Message &message)
+void ScoreBot::handleHelpCommand(const Telegram::Message &message)
+{
+    _sendReply(HELP_MESSAGE,message);
+}
+
+void ScoreBot::handleChatCommand(const Telegram::Message &message)
 {
     if (Q_UNLIKELY(!p_db->chatRegistered(message.chat.id))) {
         qInfo() << __FILE__ << ":" << __LINE__ <<". Probably bot was added to the new chat, while process was not running. Adding chat to database.";
@@ -113,7 +121,7 @@ void ScoreBot::handleCommand(const Telegram::Message &message)
     }
 
     if (message.string.startsWith(ROLL_USER_CMD)) {
-        handleRollCommand(message);
+        rollCmd(message);
         return;
     }
 
@@ -136,16 +144,68 @@ void ScoreBot::handleCommand(const Telegram::Message &message)
         handleHelpCommand(message);
         return;
     }
+
+    //Easter eggs
+    handleSomeRandomStuff(message);
 }
 
 /*
  *********************************************************************************************************************
  *
- * Specific command handlers
+ * Bot admin commands implementation
  *
  */
 
-void ScoreBot::handleRollCommand(const Telegram::Message &message)
+void ScoreBot::handleBotAdminCommand(const Telegram::Message& message)
+{
+    if (message.string.startsWith(SEND_GLOBAL_MESSAGE)) {
+        sendGlobalMessageCmd(message);
+        return;
+    }
+
+    if (message.string.startsWith(GET_TOTAL_CHATS_COUNT)) {
+        getTotalChatsCmd(message);
+        return;
+    }
+
+    if (message.string.startsWith(GET_VERSION)) {
+        getVersionCmd(message);
+        return;
+    }
+}
+
+void ScoreBot::sendGlobalMessageCmd(const Telegram::Message &message)
+{
+    QString messageText = message.string;
+    messageText.remove(SEND_GLOBAL_MESSAGE);
+    foreach (qint64 chatId,p_db->getAllChats()) {
+        p_botApi->sendMessage(chatId,messageText);
+    }
+    _sendReply(OK_MESSAGE,message);
+    return;
+}
+
+void ScoreBot::getTotalChatsCmd(const Telegram::Message &message)
+{
+    QString replyText = QString(TOTAL_CHATS_COUNT_MSG).arg(
+            p_db->getAllChats().size());
+    _sendReply(replyText,message);
+    return;
+}
+
+void ScoreBot::getVersionCmd(const Telegram::Message &message)
+{
+    _sendReply(qApp->applicationVersion(),message);
+}
+
+/*
+ *********************************************************************************************************************
+ *
+ * /roll and /unroll commands
+ *
+ */
+
+void ScoreBot::rollCmd(const Telegram::Message &message)
 {
     if (!p_db->userIsRegistered(message.chat.id,message.from.id)) {
         p_db->registerUser(message.chat.id,message.from.id);
@@ -157,9 +217,7 @@ void ScoreBot::handleRollCommand(const Telegram::Message &message)
         _sendReply(QString(USER_REGISTERED_MESSAGE).arg(message.from.firstname),message);
     }
 
-    bool canRoll = p_db->lastRolled(message.chat.id,message.from.id).date() < QDate::currentDate();
-
-    if (!canRoll) {
+    if (!userCanRoll(message)) {
         _sendReply(QString(NO_GAME_TODAY_MESSAGE).arg(message.from.firstname),message);
         return;
     }
@@ -169,13 +227,24 @@ void ScoreBot::handleRollCommand(const Telegram::Message &message)
 
     int change = SuperRandomGenerator::generateScoreChange(currentScore);
     currentScore += change;
+
     p_db->updateScore(message.chat.id,message.from.id,currentScore);
-    p_db->updateRollTime(message.chat.id,message.from.id,QDateTime::currentDateTime());
+    //DB contains data about time in UTC, so we need to convert from local clock to UTC
+    p_db->updateRollTime(message.chat.id,message.from.id,QDateTime::currentDateTime().toUTC());
 
     QString messageText = QString(change > 0 ? UPDATE_INCREASE_MESSAGE : UPDATE_DECREASE_MESSAGE)
             .arg(message.from.firstname).arg(std::abs(change)).arg(currentScore);
 
     _sendReply(messageText,message);
+}
+
+bool ScoreBot::userCanRoll(const Telegram::Message &message)
+{
+    //DB contains data about time in UTC, so we need to convert it to specified timezone
+    QDateTime lastRolled = p_db->lastRolled(message.chat.id,message.from.id);
+    lastRolled = lastRolled.toTimeZone(m_timeZone);
+
+    return lastRolled.date() < QDate::currentDate();
 }
 
 void ScoreBot::handleUnrollCommand(const Telegram::Message &message)
@@ -189,39 +258,43 @@ void ScoreBot::handleUnrollCommand(const Telegram::Message &message)
     _sendReply(QString(USER_UNREGISTERED_MESSAGE).arg(message.from.firstname),message);
 }
 
+/*
+ *********************************************************************************************************************
+ *
+ * Managing /top and /top10 commands
+ *
+ */
+
+QString ScoreBot::_userListToString(const QList<UserData> &userList,const Telegram::Message& commandMessage)
+{
+    QString result = QString();
+    int resultCount = 0;
+    for (auto i = userList.constBegin(); i != userList.constEnd(); i++) {
+        Telegram::ChatMember user = p_botApi->getChatMember(commandMessage.chat.id,i->first);
+        //If user has left the chat - omit his/her result
+        if (user.user.id == 0)
+            continue;
+
+        resultCount++;
+        QString userFullName(user.user.firstname + " " + user.user.lastname);
+        result.append(QString("%1. %2 - %3\r\n").arg(resultCount).arg(userFullName).arg(i->second));
+    }
+
+    return result;
+}
+
 void ScoreBot::handleTopCommand(const Telegram::Message &message)
 {
     QList<UserData> users = p_db->getTopUsers(message.chat.id);
 
-    QString messageText = TOP_MESSAGE;
-
-    for (int i = 0; i < users.size(); i++) {
-        Telegram::ChatMember user = p_botApi->getChatMember(message.chat.id,users.at(i).first);
-        QString userFullName(user.user.firstname + " " + user.user.lastname);
-        messageText.append(QString("%1. %2 - %3\r\n").arg(i+1).arg(userFullName).arg(users.at(i).second));
-    }
-
-    _sendReply(messageText,message);
+    _sendReply(TOP_MESSAGE+_userListToString(users,message),message);
 }
 
 void ScoreBot::handleTopTenCommand(const Telegram::Message &message)
 {
     QList<UserData> users = p_db->getTopTenUsers(message.chat.id);
 
-    QString messageText = TOP10_MESSAGE;
-
-    for (int i = 0; i < users.size(); i++) {
-        Telegram::ChatMember user = p_botApi->getChatMember(message.chat.id,users.at(i).first);
-        QString userFullName(user.user.firstname + " " + user.user.lastname);
-        messageText.append(QString("%1. %2 - %3\r\n").arg(i+1).arg(userFullName).arg(users.at(i).second));
-    }
-
-    _sendReply(messageText,message);
-}
-
-void ScoreBot::handleHelpCommand(const Telegram::Message &message)
-{
-    _sendReply(HELP_MESSAGE,message);
+    _sendReply(TOP10_MESSAGE+_userListToString(users,message),message);
 }
 
 /*
@@ -233,9 +306,8 @@ void ScoreBot::handleHelpCommand(const Telegram::Message &message)
 
 void ScoreBot::handleSomeRandomStuff(const Telegram::Message &message)
 {
-    if ((message.string == "DROP TABLE") ||
-        (message.string.startsWith("/drop"))) {
-        _sendReply("Bot database was successfully erased.",message);
+    if (message.string.startsWith(DROP_FAKECMD)) {
+        _sendReply(DROP_REPLY,message);
         return;
     }
 }

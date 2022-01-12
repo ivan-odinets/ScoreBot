@@ -33,7 +33,7 @@
 
 #include <QDateTime>
 
-typedef QPair<quint64,quint32> UserData;
+typedef QPair<quint64,qint64> UserData;
 
 class Database
 {
@@ -44,26 +44,27 @@ public:
     void setFileName(const QString& fileName)
         { db.setDatabaseName(fileName); }
 
-    void addChat(quint64 chatId);
-    bool chatRegistered(quint64 chatId);
-    void removeChat(quint64 chatId);
+    void addChat(qint64 chatId);
+    bool chatRegistered(qint64 chatId);
+    void removeChat(qint64 chatId);
+    QList<qint64> getAllChats() const;
 
-    bool userIsRegistered(quint64 chatId,quint32 userId);
-    void registerUser(quint64 chatId,quint32 userId);
-    void unregisterUser(quint64 chatId,quint32 userId);
+    bool userIsRegistered(qint64 chatId,qint64 userId);
+    void registerUser(qint64 chatId,qint64 userId);
+    void unregisterUser(qint64 chatId,qint64 userId);
 
-    bool userIsActive(quint64 chatId,quint32 userId);
-    void activateUser(quint64 chatId,quint32 userId);
-    void deactivateUser(quint64 chatId,quint32 userId);
+    bool userIsActive(qint64 chatId,qint64 userId);
+    void activateUser(qint64 chatId,qint64 userId);
+    void deactivateUser(qint64 chatId,qint64 userId);
 
-    QList<UserData> getTopTenUsers(quint64 chatId);
-    QList<UserData> getTopUsers(quint64 chatId);
+    QList<UserData> getTopTenUsers(qint64 chatId);
+    QList<UserData> getTopUsers(qint64 chatId);
 
-    QDateTime lastRolled(quint64 chatId,quint32 userId);
-    void updateRollTime(quint64 chatId,quint32 userId,const QDateTime& rollDateTime);
+    QDateTime lastRolled(qint64 chatId,qint64 userId);
+    void updateRollTime(qint64 chatId,qint64 userId,const QDateTime& rollDateTime);
 
-    int getScore(quint64 chatId,quint32 userId);
-    void updateScore(quint64 chatId,quint32 userId,int score);
+    int getScore(qint64 chatId,qint64 userId);
+    void updateScore(qint64 chatId,qint64 userId,int score);
 
     QSqlDatabase db;
 };

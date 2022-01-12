@@ -28,9 +28,11 @@
 #define SCOREBOT_H
 
 #include <QObject>
+#include <QTimeZone>
 #include "qttelegrambot.h"
 
-class Database;
+#include "Database.h"
+#include "SuperRandomGenerator.h"
 
 class ScoreBot : public QObject
 {
@@ -44,30 +46,42 @@ public:
         { p_db = db; }
     void setApiKey(const QString& key)
         { m_botApiKey = key; }
+    void setBotAdmin(qint32 userId)
+        { m_botAdmin = userId; }
+    void setTimeZone(const QTimeZone& timeZone)
+        { m_timeZone = timeZone; }
 
 public slots:
     void messageRecieved(const Telegram::Message& message);
 
 private:
-    void handleCommand(const Telegram::Message& message);
+    void handleChatCommand(const Telegram::Message& message);
     void handlePrivateMessage(const Telegram::Message& message);
 
     void handleNewChat(const Telegram::Message& message);
     void handleChatRemoval(const Telegram::Message& message);
 
-    void handleRollCommand(const Telegram::Message& message);
+    void rollCmd(const Telegram::Message& message);
+    bool userCanRoll(const Telegram::Message& message);
     void handleUnrollCommand(const Telegram::Message& message);
 
     void handleTopCommand(const Telegram::Message& message);
     void handleTopTenCommand(const Telegram::Message& message);
+    QString _userListToString(const QList<UserData>& userList,const Telegram::Message& commandMessage);
 
     void handleHelpCommand(const Telegram::Message& message);
+    void handleBotAdminCommand(const Telegram::Message& message);
+    void sendGlobalMessageCmd(const Telegram::Message& message);
+    void getTotalChatsCmd(const Telegram::Message& message);
+    void getVersionCmd(const Telegram::Message& message);
 
     void handleSomeRandomStuff(const Telegram::Message& message);
 
     Telegram::Bot*   p_botApi;
     Telegram::User   m_botUser;
     QString          m_botApiKey;
+    qint64           m_botAdmin;
+    QTimeZone        m_timeZone;
     Database*        p_db;
 
     void _sendReply(const QString& text,const Telegram::Message& message);

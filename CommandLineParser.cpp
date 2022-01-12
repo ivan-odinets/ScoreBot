@@ -30,7 +30,10 @@
 
 CommandLineParser::CommandLineParser() :
     m_dbFileOption(QStringList() << "d" << "database",QCoreApplication::translate("main","Set database file.")),
-    m_botTokenOption(QStringList() << "t" << "token",QCoreApplication::translate("main", "Set bot token."))
+    m_botTokenOption(QStringList() << "t" << "token",QCoreApplication::translate("main", "Set bot token.")),
+    m_botAdminOption(QStringList() << "a" << "admin",QCoreApplication::translate("main", "Set bot administrator userId.")),
+    m_setTimeZoneOption(QStringList() << "s" << "set-timezone",QCoreApplication::translate("main","Set timzone for bot")),
+    m_showTimeZonesOption(QStringList() << "z" <<"available-timezones",QCoreApplication::translate("main","Show available timezones"))
 {
     // -h/ --help
     addHelpOption();
@@ -46,4 +49,16 @@ CommandLineParser::CommandLineParser() :
     m_botTokenOption.setValueName("token");
     m_botTokenOption.setDefaultValue("");
     addOption(m_botTokenOption);
+
+    // -a/ --admin
+    m_botAdminOption.setValueName("admin");
+    m_botAdminOption.setDefaultValue("-1");
+    addOption(m_botAdminOption);
+
+    // -s// --set-timezone
+    m_setTimeZoneOption.setValueName("timezone");
+    addOption(m_setTimeZoneOption);
+
+    // // --available-timezones
+    addOption(m_showTimeZonesOption);
 }

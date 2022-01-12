@@ -28,7 +28,7 @@
 #define TEXTSTRINGS_H
 
 #define APP_NAME                    "ScoreBot"
-#define APP_VERSION                 "0.1"
+#define APP_VERSION                 "0.1.1"
 
 /*
  *********************************************************************************************************************
@@ -37,11 +37,17 @@
  *
  */
 
-#define ROLL_USER_CMD        "/roll"
-#define UNROLL_USER_CMD      "/unroll"
-#define HELP_CMD             "/help"
-#define TOP_TEN_CMD          "/top10"
-#define TOP_CMD              "/top"
+#define ROLL_USER_CMD          "/roll"
+#define UNROLL_USER_CMD        "/unroll"
+#define HELP_CMD               "/help"
+#define TOP_TEN_CMD            "/top10"
+#define TOP_CMD                "/top"
+
+#define DROP_FAKECMD           "/drop"
+
+#define SEND_GLOBAL_MESSAGE    "/sendGlobalMessage"
+#define GET_TOTAL_CHATS_COUNT  "/getTotalChats"
+#define GET_VERSION            "/version"
 
 /*
  *********************************************************************************************************************
@@ -49,6 +55,8 @@
  * UI Messages
  *
  */
+
+#define OK_MESSAGE                  "OK"
 
 #define ONLY_FOR_CHATS_MESSAGE      "Only for group chats"
 
@@ -70,5 +78,9 @@
                                     "Exit the game (progress will be saved): " UNROLL_USER_CMD "\r\n"\
                                     "\r\n"\
                                     "Bot is not working in private chats, only in groups."
+
+#define DROP_REPLY                  "Bot database was successfully erased."
+
+#define TOTAL_CHATS_COUNT_MSG       "Total chats count: %1"
 
 #endif // TEXTSTRINGS_H

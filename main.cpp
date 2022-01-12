@@ -37,6 +37,8 @@
 #include "ScoreBot.h"
 #include "StringDefines.h"
 
+#include <QTimeZone>
+
 ScoreBot*      bot       = nullptr;
 Database*      sqliteDb  = nullptr;
 
@@ -51,6 +53,14 @@ int main(int argc, char *argv[])
     //Parse command line
     CommandLineParser parser;
     parser.process(app);
+
+    if (parser.showTimeZones()) {
+        qInfo() << "Available timezones:";
+        foreach (QByteArray id, QTimeZone::availableTimeZoneIds()) {
+            qInfo() << QTimeZone(id);
+        }
+        return 0;
+    }
 
     if (parser.token().isEmpty()) {
         qCritical() << __FILE__ << ":" << __LINE__ << ". API Token must be specified.";
@@ -75,6 +85,27 @@ int main(int argc, char *argv[])
     bot = new ScoreBot;
     bot->setApiKey(parser.token());
     bot->setDatabase(sqliteDb);
+
+    if (parser.botAdmin() == -1) {
+        qWarning() << __FILE__ << ":" << __LINE__ << ". Bot administrator is not set, so administration commands will not work!";
+    } else {
+        bot->setBotAdmin(parser.botAdmin());
+    }
+
+    QTimeZone botTimeZone;
+    if (parser.timeZone().isEmpty()) {
+        qWarning() << __FILE__ << ":" << __LINE__ << ". Timezone not specified, using UTC as default one.";
+    } else {
+        botTimeZone = QTimeZone(parser.timeZone().toStdString().c_str());
+    }
+
+    if (!botTimeZone.isValid()) {
+        qWarning() << __FILE__ << ":" << __LINE__ << QString(". Timezone %1 is invalid, using UTC as default one.").arg(parser.timeZone());
+    } else {
+        qInfo() << __FILE__ << ":" << __LINE__ << ". Setting timezone for the bot: "<<botTimeZone;
+    }
+
+    bot->setTimeZone(botTimeZone);
 
     //Start Bot
     if (!bot->started()) {
