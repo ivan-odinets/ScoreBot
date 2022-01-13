@@ -265,12 +265,14 @@ void ScoreBot::handleUnrollCommand(const Telegram::Message &message)
  *
  */
 
-QString ScoreBot::_userListToString(const QList<UserData> &userList,const Telegram::Message& commandMessage)
+void ScoreBot::handleTopCommand(const Telegram::Message &message)
 {
+    QList<UserData> users = p_db->getTopUsers(message.chat.id);
+
     QString result = QString();
     int resultCount = 0;
-    for (auto i = userList.constBegin(); i != userList.constEnd(); i++) {
-        Telegram::ChatMember user = p_botApi->getChatMember(commandMessage.chat.id,i->first);
+    for (auto i = users.constBegin(); i != users.constEnd(); i++) {
+        Telegram::ChatMember user = p_botApi->getChatMember(message.chat.id,i->first);
         //If user has left the chat - omit his/her result
         if (user.user.id == 0)
             continue;
@@ -280,21 +282,29 @@ QString ScoreBot::_userListToString(const QList<UserData> &userList,const Telegr
         result.append(QString("%1. %2 - %3\r\n").arg(resultCount).arg(userFullName).arg(i->second));
     }
 
-    return result;
-}
-
-void ScoreBot::handleTopCommand(const Telegram::Message &message)
-{
-    QList<UserData> users = p_db->getTopUsers(message.chat.id);
-
-    _sendReply(TOP_MESSAGE+_userListToString(users,message),message);
+    _sendReply(TOP_MESSAGE+result,message);
 }
 
 void ScoreBot::handleTopTenCommand(const Telegram::Message &message)
 {
-    QList<UserData> users = p_db->getTopTenUsers(message.chat.id);
+    QList<UserData> users = p_db->getTopUsers(message.chat.id);
 
-    _sendReply(TOP10_MESSAGE+_userListToString(users,message),message);
+    QString result = QString();
+    int resultCount = 0;
+    for (auto i = users.constBegin(); i != users.constEnd(); i++) {
+        Telegram::ChatMember user = p_botApi->getChatMember(message.chat.id,i->first);
+        //If user has left the chat - omit his/her result
+        if (user.user.id == 0)
+            continue;
+
+        resultCount++;
+        QString userFullName(user.user.firstname + " " + user.user.lastname);
+        result.append(QString("%1. %2 - %3\r\n").arg(resultCount).arg(userFullName).arg(i->second));
+        if (resultCount >= 10) //If we have already top10 results - time to finish loop
+            break;
+    }
+
+    _sendReply(TOP10_MESSAGE+result,message);
 }
 
 /*

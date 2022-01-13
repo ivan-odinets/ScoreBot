@@ -67,7 +67,6 @@ private:
 
     void handleTopCommand(const Telegram::Message& message);
     void handleTopTenCommand(const Telegram::Message& message);
-    QString _userListToString(const QList<UserData>& userList,const Telegram::Message& commandMessage);
 
     void handleHelpCommand(const Telegram::Message& message);
     void handleBotAdminCommand(const Telegram::Message& message);
