@@ -32,7 +32,7 @@
 #include <QCoreApplication>
 
 ScoreBot::ScoreBot(QObject* parent)
-    : QObject(parent),p_botApi(nullptr),p_db(nullptr)
+    : QObject(parent),p_botApi(nullptr),p_db(nullptr),isSuspended(false)
 {}
 ScoreBot::~ScoreBot()
 {}
@@ -63,7 +63,7 @@ void ScoreBot::messageRecieved(const Telegram::Message& message)
         return;
     }
 
-    if (Q_LIKELY(message.string.startsWith("/"))) {
+    if (Q_LIKELY(message.string.startsWith(QChar('/')))) {
         handleChatCommand(message);
         return;
     }
@@ -75,7 +75,7 @@ void ScoreBot::messageRecieved(const Telegram::Message& message)
         return;
     }
 
-    //Bot was kicked out from a chat
+    //Bot was kicked out from a chatQStringLiteral("/"
     if ((message.type == Telegram::Message::LeftChatParticipantType) &&
         (message.user.id == m_botUser.id)) {
         handleChatRemoval(message);
@@ -95,7 +95,7 @@ void ScoreBot::handlePrivateMessage(const Telegram::Message& message)
         return;
     }
 
-    _sendReply(ONLY_FOR_CHATS_MESSAGE,message);
+    _sendReply(QStringLiteral(ONLY_FOR_CHATS_MESSAGE),message);
 }
 
 void ScoreBot::handleNewChat(const Telegram::Message& message)
@@ -115,32 +115,37 @@ void ScoreBot::handleHelpCommand(const Telegram::Message &message)
 
 void ScoreBot::handleChatCommand(const Telegram::Message &message)
 {
+    if (Q_UNLIKELY(isSuspended)) {
+        _sendReply(QStringLiteral(SUSPENDED_MESSAGE),message);
+        return;
+    }
+
     if (Q_UNLIKELY(!p_db->chatRegistered(message.chat.id))) {
         qInfo() << __FILE__ << ":" << __LINE__ <<". Probably bot was added to the new chat, while process was not running. Adding chat to database.";
         p_db->addChat(message.chat.id);
     }
 
-    if (message.string.startsWith(ROLL_USER_CMD)) {
+    if (message.string.startsWith(QStringLiteral(ROLL_USER_CMD))) {
         rollCmd(message);
         return;
     }
 
-    if (message.string.startsWith(UNROLL_USER_CMD)) {
+    if (message.string.startsWith(QStringLiteral(UNROLL_USER_CMD))) {
         handleUnrollCommand(message);
         return;
     }
 
-    if (message.string.startsWith(TOP_TEN_CMD)) {
+    if (message.string.startsWith(QStringLiteral(TOP_TEN_CMD))) {
         handleTopTenCommand(message);
         return;
     }
 
-    if (message.string.startsWith(TOP_CMD)) {
+    if (message.string.startsWith(QStringLiteral(TOP_CMD))) {
         handleTopCommand(message);
         return;
     }
 
-    if (message.string.startsWith(HELP_CMD)) {
+    if (message.string.startsWith(QStringLiteral(HELP_CMD))) {
         handleHelpCommand(message);
         return;
     }
@@ -158,18 +163,38 @@ void ScoreBot::handleChatCommand(const Telegram::Message &message)
 
 void ScoreBot::handleBotAdminCommand(const Telegram::Message& message)
 {
-    if (message.string.startsWith(SEND_GLOBAL_MESSAGE)) {
+    if (message.string.startsWith(QStringLiteral(SEND_GLOBAL_MESSAGE))) {
         sendGlobalMessageCmd(message);
         return;
     }
 
-    if (message.string.startsWith(GET_TOTAL_CHATS_COUNT)) {
+    if (message.string.startsWith(QStringLiteral(GET_TOTAL_CHATS_COUNT))) {
         getTotalChatsCmd(message);
         return;
     }
 
-    if (message.string.startsWith(GET_VERSION)) {
+    if (message.string.startsWith(QStringLiteral(GET_VERSION))) {
         getVersionCmd(message);
+        return;
+    }
+
+    if (message.string.startsWith(QStringLiteral(BACKUP_DATABASE))) {
+        backupDatabaseCmd(message);
+        return;
+    }
+
+    if (message.string.startsWith(QStringLiteral(SUSPEND_BOT))) {
+        suspendBot(message);
+        return;
+    }
+
+    if (message.string.startsWith(QStringLiteral(RESUME_BOT))) {
+        resumeBot(message);
+        return;
+    }
+
+    if (message.string.startsWith(QChar('/'))) {
+        _sendReply(QString(UNKNOWN_COMMAND_MESSAGE).arg(message.string),message);
         return;
     }
 }
@@ -181,7 +206,7 @@ void ScoreBot::sendGlobalMessageCmd(const Telegram::Message &message)
     foreach (qint64 chatId,p_db->getAllChats()) {
         p_botApi->sendMessage(chatId,messageText);
     }
-    _sendReply(OK_MESSAGE,message);
+    _sendReply(QStringLiteral(OK_MESSAGE),message);
     return;
 }
 
@@ -191,6 +216,30 @@ void ScoreBot::getTotalChatsCmd(const Telegram::Message &message)
             p_db->getAllChats().size());
     _sendReply(replyText,message);
     return;
+}
+
+void ScoreBot::backupDatabaseCmd(const Telegram::Message& message)
+{
+    QFile dbFile(p_db->getFileName());
+    if (!dbFile.exists()) {
+        qWarning() << __FILE__ << ":" << __LINE__ << ". Error database file not found! p_db->getFileName()="<<p_db->getFileName();
+        _sendReply(QStringLiteral(ERROR_OPENING_DB),message);
+    }
+
+    p_botApi->sendDocument(message.from.id,&dbFile,message.id);
+    return;
+}
+
+void ScoreBot::suspendBot(const Telegram::Message& message)
+{
+    isSuspended = true;
+    _sendReply(QStringLiteral(OK_MESSAGE),message);
+}
+
+void ScoreBot::resumeBot(const Telegram::Message& message)
+{
+    isSuspended = false;
+    _sendReply(QStringLiteral(OK_MESSAGE),message);
 }
 
 void ScoreBot::getVersionCmd(const Telegram::Message &message)
@@ -242,7 +291,8 @@ bool ScoreBot::userCanRoll(const Telegram::Message &message)
 {
     //DB contains data about time in UTC, so we need to convert it to specified timezone
     QDateTime lastRolled = p_db->lastRolled(message.chat.id,message.from.id);
-    lastRolled = lastRolled.toTimeZone(m_timeZone);
+    if (m_timeZone.isValid())
+        lastRolled = lastRolled.toTimeZone(m_timeZone);
 
     return lastRolled.date() < QDate::currentDate();
 }
@@ -317,7 +367,7 @@ void ScoreBot::handleTopTenCommand(const Telegram::Message &message)
 void ScoreBot::handleSomeRandomStuff(const Telegram::Message &message)
 {
     if (message.string.startsWith(DROP_FAKECMD)) {
-        _sendReply(DROP_REPLY,message);
+        _sendReply(QStringLiteral(DROP_REPLY),message);
         return;
     }
 }

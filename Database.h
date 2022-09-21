@@ -43,6 +43,8 @@ public:
     bool databaseInitialized();
     void setFileName(const QString& fileName)
         { db.setDatabaseName(fileName); }
+    QString getFileName() const
+        { return db.databaseName(); }
 
     void addChat(qint64 chatId);
     bool chatRegistered(qint64 chatId);
@@ -66,6 +68,7 @@ public:
     int getScore(qint64 chatId,qint64 userId);
     void updateScore(qint64 chatId,qint64 userId,int score);
 
+private:
     QSqlDatabase db;
 };
 

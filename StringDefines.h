@@ -28,7 +28,7 @@
 #define TEXTSTRINGS_H
 
 #define APP_NAME                    "ScoreBot"
-#define APP_VERSION                 "0.1.2"
+#define APP_VERSION                 "0.1.3"
 
 /*
  *********************************************************************************************************************
@@ -48,6 +48,9 @@
 #define SEND_GLOBAL_MESSAGE    "/sendGlobalMessage"
 #define GET_TOTAL_CHATS_COUNT  "/getTotalChats"
 #define GET_VERSION            "/version"
+#define BACKUP_DATABASE        "/backupDB"
+#define SUSPEND_BOT            "/suspend"
+#define RESUME_BOT             "/resume"
 
 /*
  *********************************************************************************************************************
@@ -57,6 +60,9 @@
  */
 
 #define OK_MESSAGE                  "OK"
+#define UNKNOWN_COMMAND_MESSAGE     "Unknown command: %1"
+#define ERROR_OPENING_DB            "Error in opening database file. Manual backup needed"
+#define SUSPENDED_MESSAGE           "Bot was stopped because of reasonable reasons. It will be started again in the nearby future"
 
 #define ONLY_FOR_CHATS_MESSAGE      "Only for group chats"
 

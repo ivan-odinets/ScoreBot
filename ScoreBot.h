@@ -32,7 +32,6 @@
 #include "qttelegrambot.h"
 
 #include "Database.h"
-#include "SuperRandomGenerator.h"
 
 class ScoreBot : public QObject
 {
@@ -72,6 +71,9 @@ private:
     void handleBotAdminCommand(const Telegram::Message& message);
     void sendGlobalMessageCmd(const Telegram::Message& message);
     void getTotalChatsCmd(const Telegram::Message& message);
+    void backupDatabaseCmd(const Telegram::Message& message);
+    void suspendBot(const Telegram::Message& message);
+    void resumeBot(const Telegram::Message& message);
     void getVersionCmd(const Telegram::Message& message);
 
     void handleSomeRandomStuff(const Telegram::Message& message);
@@ -82,6 +84,7 @@ private:
     qint64           m_botAdmin;
     QTimeZone        m_timeZone;
     Database*        p_db;
+    bool             isSuspended;
 
     void _sendReply(const QString& text,const Telegram::Message& message);
 };
