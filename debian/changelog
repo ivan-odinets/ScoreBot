@@ -1,0 +1,6 @@
+score-bot (0.2.0-1) unstable; urgency=low
+
+  * Initial release of debianized score-bot
+  * Added possibility to use custom UI messages
+
+ -- Ivan Odinets <i_odinets@protonmail.com>  Sat, 04 Apr 2023 04:20:00 +0200

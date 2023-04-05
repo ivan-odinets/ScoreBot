@@ -12,11 +12,19 @@ Bot is not working in private chats, only in groups.
 
 First of all - create bot in Telegram. Check telegram docs [here](https://core.telegram.org/bots#6-botfather).
 
-```bash
-qmake
-make
-./ScoreBot -t API_TOKEN -d /path/to/database/file 
+For  Debian:
+```
+git clone git@github.com:ivan-odinets/ScoreBot.git
+cd ScoreBot
+git submodule init
+git submodule update
+sudo  apt-get  install  qtbase5-dev  qtbase5-dev-tools  qt5-qmake  libqt5core5a  libqt5network5 libqt5sql5
+debuild  -b  -uc  -us
 ```
 
+## Customization
+
+If you want to use your custom bot replies - edit file ui-messages.json and feed edited version to the bot (using command line option -u / --strings ).
+
 ## License
-[MIT](https://choosealicense.com/licenses/mit/)
+[GNU General Public License v3.0](https://choosealicense.com/licenses/gpl-3.0/)

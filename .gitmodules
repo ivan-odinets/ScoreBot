@@ -1,3 +1,3 @@
-[submodule "QtTelegramBot"]
-	path = QtTelegramBot
-	url = git@github.com:ivan-odinets/QtTelegramBot.git
+[submodule "src/QtTelegramBot"]
+	path = src/QtTelegramBot
+	url = https://github.com/ivan-odinets/QtTelegramBot.git

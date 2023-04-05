@@ -1,0 +1,34 @@
+{
+    "commands": {
+        "BackupDatabaseCmd": "/backupDB",
+        "DropCmd": "/drop",
+        "GetTotalChatsCmd": "/getTotalChats",
+        "GetVersionCmd": "/version",
+        "HelpCmd": "/help",
+        "ResumeBotCmd": "/resume",
+        "RollCmd": "/roll",
+        "SendGlobalMessageCmd": "/sendGlobalMessage",
+        "SuspendBotCmd": "/suspend",
+        "Top10Cmd": "/top10",
+        "TopCmd": "/top",
+        "UnrollCmd": "/unroll"
+    },
+    "messages": {
+        "DropReplyMessage": "Bot database was successfully erased.",
+        "ErrorOpeningDb": "Error in opening database file. Manual backup needed",
+        "HelpMessage": "This is a very simple \"game\" bot for Telegram group chats.\r\nYou can play in this game each day by entering /roll in the group chat. After this your score increases/decreases by random value.\r\nTop scores: /top\r\nExit the game (progress will be saved): /unroll\r\n\r\nBot is not working in private chats, only in groups.",
+        "NoGameTodayMessage": "%1 you have rolled today",
+        "OkMessage": "OK",
+        "OnlyForChatsMessage": "Only for group chats",
+        "SuspendedMessage": "Bot was stopped because of reasonable reasons. It will be started again in the nearby future",
+        "TopMessage": "Top players:\r\n\r\n",
+        "TopTenMessage": "Top 10 players:\r\n\r\n",
+        "TotalChatsCountMessage": "Total chats count: %1",
+        "UnknownCommandMessage": "Unknown command: %1",
+        "UpdateDecreaseMessage": "%1, your score decreased by %2. Now your score is: %3.",
+        "UpdateIncreaseMessage": "%1, your score increased by %2. Now your score is: %3.",
+        "UserNotRegisteredMessage": "%1 you are not registered in the game",
+        "UserRegisteredMessage": "%1 you are registered in the game",
+        "UserUnregisteredMessage": "%1 you have unregistered in the game"
+    }
+}

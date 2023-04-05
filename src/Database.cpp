@@ -1,26 +1,23 @@
 /*
  **********************************************************************************************************************
  *
- * MIT License
- * Copyright (c) 2021 Ivan Odinets
+ * This file is part of ScoreBot project
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Copyright (c) 2021-2023 Ivan Odinets <i_odinets@protonmail.com>
  *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
+ * ScoreBot is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version
+ * 3 of the License, or (at your option) any later version.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * ScoreBot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ScoreBot; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
  */
 
@@ -41,7 +38,7 @@ Database::Database()
 bool Database::databaseInitialized()
 {
     if (!db.open()) {
-        qCritical() << __FILE__ << " " << __LINE__ <<". Error in initializing database - "<<db.lastError();
+        qCritical() << "Error in initializing database - "<<db.lastError();
         return false;
     }
 
@@ -50,9 +47,7 @@ bool Database::databaseInitialized()
 
 /*
  *********************************************************************************************************************
- *
  * Retrieving & updating chats information (tables)
- *
  */
 
 bool Database::chatRegistered(qint64 chatId)
@@ -63,7 +58,7 @@ bool Database::chatRegistered(qint64 chatId)
 void Database::addChat(qint64 chatId)
 {
     if (Q_UNLIKELY(chatRegistered(chatId))) {
-        qInfo() << __FILE__ << ":" << __LINE__ << ". This should have not happened. Probably database needs to be rechecked. chat_id="<<chatId;
+        qWarning() << "This should have not happened. Probably database needs to be rechecked. chat_id="<<chatId;
         return;
     }
 
@@ -72,7 +67,7 @@ void Database::addChat(qint64 chatId)
     QSqlQuery query;
 
     if (Q_UNLIKELY(!query.exec(queryText))) {
-        qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
+        qWarning() << "SQL error: "<<query.lastError();
         return;
     }
 
@@ -85,7 +80,7 @@ void Database::removeChat(qint64 chatId)
             .arg(chatId);
 
     if (Q_UNLIKELY(!query.exec(queryText))) {
-        qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
+        qWarning() << "SQL error: "<<query.lastError();
         return;
     }
 }
@@ -105,9 +100,7 @@ QList<qint64> Database::getAllChats() const
 
 /*
  *********************************************************************************************************************
- *
  * Retrieving & updating user resistration information
- *
  */
 
 bool Database::userIsRegistered(qint64 chatId,qint64 userId)
@@ -117,7 +110,7 @@ bool Database::userIsRegistered(qint64 chatId,qint64 userId)
             .arg(chatId).arg(userId);
 
     if (Q_UNLIKELY(!query.exec(queryText.toLatin1()))) {
-        qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
+        qWarning() << "SQL error: "<<query.lastError();
         return false;
     }
 
@@ -139,7 +132,7 @@ void Database::registerUser(qint64 chatId,qint64 userId)
             .arg(chatId).arg(userId);
 
     if (Q_UNLIKELY(!query.exec(queryText)))
-        qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
+        qWarning() << "SQL error: "<<query.lastError();
 
     return;
 }
@@ -151,7 +144,7 @@ void Database::unregisterUser(qint64 chatId,qint64 userId)
             .arg(chatId).arg(userId);
 
     if (Q_UNLIKELY(!query.exec(queryText)))
-        qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
+        qWarning() << "SQL error: "<<query.lastError();
 }
 
 /*
@@ -164,7 +157,7 @@ void Database::unregisterUser(qint64 chatId,qint64 userId)
 bool Database::userIsActive(qint64 chatId,qint64 userId)
 {
     if (Q_UNLIKELY(!userIsRegistered(chatId,userId))) {
-        qInfo() << __FILE__ << ":" << __LINE__ << ". this should not happen... userId="<<userId<<"; chatId="<<chatId;
+        qInfo() << "This should not happen... userId="<<userId<<"; chatId="<<chatId;
         return false;
     }
 
@@ -173,7 +166,7 @@ bool Database::userIsActive(qint64 chatId,qint64 userId)
             .arg(chatId).arg(userId);
 
     if (Q_UNLIKELY(!query.exec(queryText))) {
-        qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
+        qWarning() << "SQL error: "<<query.lastError();
         return false;
     }
 
@@ -181,7 +174,7 @@ bool Database::userIsActive(qint64 chatId,qint64 userId)
     bool result = (query.value("in_game").toInt() == 1);
 
     if (query.next())
-        qWarning() << __FILE__ << ":" << __LINE__ << ". Duplicates in database?";
+        qWarning() << "Duplicates in database?";
 
     return result;
 }
@@ -193,7 +186,7 @@ void Database::activateUser(qint64 chatId,qint64 userId)
             .arg(chatId).arg(userId);
 
     if (Q_UNLIKELY(!query.exec(queryText)))
-        qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
+        qWarning() << "SQL error: "<<query.lastError();
 
 }
 
@@ -204,15 +197,13 @@ void Database::deactivateUser(qint64 chatId,qint64 userId)
             .arg(chatId).arg(userId);
 
     if (Q_UNLIKELY(!query.exec(queryText)))
-        qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
+        qWarning() << "SQL error: "<<query.lastError();
 
 }
 
 /*
  *********************************************************************************************************************
- *
  * Retrieving & updating user paramaters
- *
  */
 
 void Database::updateScore(qint64 chatId,qint64 userId,int score)
@@ -240,16 +231,14 @@ int Database::getScore(qint64 chatId,qint64 userId)
     int score = query.value("score").toInt();
 
     if (Q_UNLIKELY(!query.exec(queryText)))
-        qWarning() << __FILE__ << ":" << __LINE__ << ". Seems to have duplicates in database? chatId="<<chatId<<"; userId="<<userId;
+        qWarning() << "Seems to have duplicates in database? chatId="<<chatId<<"; userId="<<userId;
 
     return score;
 }
 
 /*
  *********************************************************************************************************************
- *
  * Retrieving & updating roll times
- *
  */
 
 QDateTime Database::lastRolled(qint64 chatId,qint64 userId)
@@ -259,7 +248,7 @@ QDateTime Database::lastRolled(qint64 chatId,qint64 userId)
             .arg(chatId).arg(userId);
 
     if (Q_UNLIKELY(!query.exec(queryText))) {
-        qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
+        qWarning() << "SQL error: "<<query.lastError();
         return QDateTime();
     }
 
@@ -268,7 +257,7 @@ QDateTime Database::lastRolled(qint64 chatId,qint64 userId)
 
     QDateTime result = QDateTime::fromSecsSinceEpoch(secondsSinceEpochLastRoll,Qt::UTC);
     if (Q_UNLIKELY(query.next()))
-        qWarning() << __FILE__ << ":" << __LINE__ << ". Seems to have duplicates in database? chatId="<<chatId<<"; userId="<<userId;
+        qWarning() << "Seems to have duplicates in database? chatId="<<chatId<<"; userId="<<userId;
 
     return result;
 }
@@ -280,16 +269,14 @@ void Database::updateRollTime(qint64 chatId,qint64 userId, const QDateTime& roll
 
     QSqlQuery query;
     if (Q_UNLIKELY(!query.exec(queryText))) {
-        qWarning() << __FILE__ << ":" << __LINE__ << ". SQL error: "<<query.lastError();
+        qWarning() << "SQL error: "<<query.lastError();
         return;
     }
 }
 
 /*
  *********************************************************************************************************************
- *
  * Retrieving user top scores
- *
  */
 
 QList<UserData> Database::getTopUsers(qint64 chatId)

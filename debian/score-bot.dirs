@@ -1,0 +1,4 @@
+etc/bots/telegram
+usr/bin
+var/lib/bots/telegram/score-bot
+var/log/bots/telegram/score-bot

@@ -1,0 +1,4 @@
+debian/score-bot.conf                   etc/bots/telegram
+bin/score-bot                           usr/bin
+debian/score-bot.service                lib/systemd/system
+debian/ui-messages.json                 var/lib/bots/telegram/score-bot

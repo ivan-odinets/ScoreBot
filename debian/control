@@ -1,0 +1,18 @@
+Source: score-bot
+Section: web
+Priority: optional
+Maintainer: Ivan Odinets <i_odinets@protonmail.com>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (=13), qtbase5-dev, qtbase5-dev-tools, qt5-qmake
+Standards-Version: 4.6.1
+Homepage: <https://github.com/ivan-odinets/ScoreBot>
+
+Package: score-bot
+Architecture: any
+Depends:
+ systemd, adduser, libqt5core5a, libqt5network5, ${shlibs:Depends}, ${misc:Depends},
+Description: Telegram Bot which aggressively reacts on all voice and video messages
+ This bot is a modified copy of russian-speaking bot (@zvukozavrbot, 
+ t.me/zvukozavrbot). After addition to the group chat bot will aggressively react 
+ on all voice and video messages

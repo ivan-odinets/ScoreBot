@@ -1,0 +1,21 @@
+[Unit]
+Description=ScoreBot for Telegram
+After=network.target
+
+[Service]
+User=score-bot
+#EnvironmentFile=/etc/bots/telegram/score-bot.conf
+#ExecStart=/usr/bin/score-bot -t $TOKEN -d $DATABASE -a $ADMIN
+ExecStart=/usr/bin/score-bot -c /etc/bots/telegram/score-bot.conf
+StandardOutput=file:/var/log/bots/telegram/score-bot/output.log
+StandardError=file:/var/log/bots/telegram/score-bot/error.log
+
+ProtectSystem=yes
+NoNewPrivileges=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+ProtectKernelModules=yes
+RestrictNamespaces=yes
+
+[Install]
+WantedBy=multi-user.target
